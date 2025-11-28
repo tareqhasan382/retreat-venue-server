@@ -1,0 +1,29 @@
+// ENUMS
+enum VenueType {
+  HOTEL
+  RESORT
+  VILLA
+  CONFERENCE_CENTER
+  OTHER
+}
+
+//       VENUE MODEL         
+model Venue {
+  id            String    @id @default(uuid())
+  name          String
+  city          String
+  country       String
+  capacity      Int
+  pricePerNight Int
+  description   String?
+  imageUrl      String?
+  type          VenueType @default(HOTEL)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  bookingInquiry BookingInquiry[]
+
+  @@map("venues")
+}

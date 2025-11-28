@@ -1,0 +1,21 @@
+//    BOOKING INQUIRY MODEL
+model BookingInquiry {
+  id String @id @default(uuid())
+
+  venueId       String
+  companyName   String
+  email         String
+  startDate     DateTime
+  endDate       DateTime
+  attendeeCount Int
+
+  // Relations
+  venue Venue @relation(fields: [venueId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // To help detect overlapping bookings:
+  @@index([venueId, startDate, endDate])
+  @@map("booking_inquiries")
+}
