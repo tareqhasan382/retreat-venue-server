@@ -1,0 +1,23 @@
+model User {
+  id                   String     @id @default(uuid())
+  email                String     @unique
+  password             String
+  firstName            String
+  lastName             String?
+  phone                String?
+  profileImage         String?
+  role                 UserRole   @default(USER)
+  status               UserStatus @default(ACTIVE)
+  lastLogin            DateTime?
+  verified             Boolean    @default(false)
+  // --- Fields for RESET (TOTP) ---
+  passwordResetToken   String? // store token code
+  passwordResetExpires DateTime? // code live time
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+
+  @@map("users")
+}
