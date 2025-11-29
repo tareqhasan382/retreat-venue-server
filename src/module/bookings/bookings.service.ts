@@ -1,26 +1,105 @@
-import { Injectable } from '@nestjs/common';
-import { CreateBookingDto } from './dto/create-booking.dto';
-import { UpdateBookingDto } from './dto/update-booking.dto';
+import { BadRequestException, Injectable,InternalServerErrorException,NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../../prisma/prisma.service';
+import { CreateBookingInquiryDto } from './dto/create-booking.dto';
+import { ListBookingInquiryDto } from './dto/list-booking-inquiries.dto';
+import { UpdateBookingInquiryDto } from './dto/update-booking.dto';
+
 
 @Injectable()
 export class BookingsService {
-  create(createBookingDto: CreateBookingDto) {
-    return 'This action adds a new booking';
+  constructor(private prisma: PrismaService) {}
+
+  async create(dto: CreateBookingInquiryDto) {
+    try {
+      if (new Date(dto.startDate) >= new Date(dto.endDate)) {
+        throw new BadRequestException('End date must be after start date');
+      }
+
+      // Optional: Overlapping booking check
+      const overlap = await this.prisma.bookingInquiry.findFirst({
+        where: {
+          venueId: dto.venueId,
+          startDate: { lte: new Date(dto.endDate) },
+          endDate: { gte: new Date(dto.startDate) }
+        }
+      });
+
+      if (overlap) {
+        throw new BadRequestException('Venue is already booked for these dates.');
+      }
+
+      return await this.prisma.bookingInquiry.create({ data: dto });
+    } catch (error) {
+      console.error(error);
+
+      if (error instanceof BadRequestException) throw error;
+
+      throw new InternalServerErrorException(error?.message || 'Failed to create booking inquiry');
+    }
   }
 
-  findAll() {
-    return `This action returns all bookings`;
+  async findAll(filters: ListBookingInquiryDto) {
+    try {
+      return await this.prisma.bookingInquiry.findMany({
+        where: {
+          companyName: filters.companyName
+            ? { contains: filters.companyName, mode: 'insensitive' }
+            : undefined,
+          venue: filters.city
+            ? { city: { contains: filters.city, mode: 'insensitive' } }
+            : undefined
+        },
+        include: { venue: true },
+        orderBy: { createdAt: 'desc' }
+      });
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to fetch booking inquiries');
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} booking`;
+  async findOne(id: string) {
+    try {
+      const booking = await this.prisma.bookingInquiry.findUnique({
+        where: { id },
+        include: { venue: true }
+      });
+
+      if (!booking) throw new NotFoundException('Booking inquiry not found');
+
+      return booking;
+    } catch (error) {
+      if (error instanceof NotFoundException) throw error;
+
+      throw new InternalServerErrorException('Failed to retrieve booking inquiry');
+    }
   }
 
-  update(id: number, updateBookingDto: UpdateBookingDto) {
-    return `This action updates a #${id} booking`;
+  async update(id: string, dto: UpdateBookingInquiryDto) {
+    try {
+      const exists = await this.prisma.bookingInquiry.findUnique({ where: { id } });
+      if (!exists) throw new NotFoundException('Booking inquiry not found');
+
+      return await this.prisma.bookingInquiry.update({
+        where: { id },
+        data: dto
+      });
+    } catch (error) {
+      if (error instanceof NotFoundException) throw error;
+
+      throw new InternalServerErrorException('Failed to update booking inquiry');
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} booking`;
+  async remove(id: string) {
+    try {
+      const booking = await this.prisma.bookingInquiry.findUnique({ where: { id } });
+      if (!booking) throw new NotFoundException('Booking inquiry not found');
+
+      return await this.prisma.bookingInquiry.delete({ where: { id } });
+    } catch (error) {
+      if (error instanceof NotFoundException) throw error;
+
+      throw new InternalServerErrorException('Failed to delete booking inquiry');
+    }
   }
 }
