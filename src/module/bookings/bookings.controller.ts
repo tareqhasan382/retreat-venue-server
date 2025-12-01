@@ -27,6 +27,7 @@ export class BookingsController {
   @ApiQuery({ name: "city", required: false })
   @ApiQuery({ name: "companyName", required: false })
   async findAll(@Query() filters: ListBookingInquiryDto, @Res() res: Response) {
+    //console.log(filters);
     const data = await this.service.findAll(filters);
     return sendResponse(res, {
       statusCode: HttpStatus.OK,

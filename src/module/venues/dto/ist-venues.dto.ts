@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { IsInt, IsNumber, IsOptional, IsString, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class ListVenuesDto {
@@ -21,4 +21,14 @@ export class ListVenuesDto {
   @Min(1)
   @Type(() => Number)
   maxPrice?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  skip ?: number = 1;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  take ?: number = 9;
 }

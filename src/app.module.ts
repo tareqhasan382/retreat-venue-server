@@ -9,7 +9,7 @@ import { MailModule } from './module/mail/mail.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { VenuesModule } from './module/venues/venues.module';
 import { BookingsModule } from './module/bookings/bookings.module';
-
+import { VenueSeeder } from './seeder/seeder.service';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -30,7 +30,7 @@ import { BookingsModule } from './module/bookings/bookings.module';
           },
         },
         defaults: {
-          from: config.get<string>('SMTP_FROM') || config.get<string>('SMTP_USER') || 'SoftVence Newsletter <noreply@softvence.com>',
+          from: config.get<string>('SMTP_FROM') || config.get<string>('SMTP_USER'),
         },
       }),
     }),
@@ -43,6 +43,6 @@ import { BookingsModule } from './module/bookings/bookings.module';
    
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService,VenueSeeder],
 })
 export class AppModule {}

@@ -11,32 +11,44 @@ export class BookingsService {
 
   async create(dto: CreateBookingInquiryDto) {
     try {
-      if (new Date(dto.startDate) >= new Date(dto.endDate)) {
+      const startDate = new Date(dto.startDate);
+      const endDate = new Date(dto.endDate);
+
+      if (startDate >= endDate) {
         throw new BadRequestException('End date must be after start date');
       }
 
-      // Optional: Overlapping booking check
+      // Check for overlapping bookings
       const overlap = await this.prisma.bookingInquiry.findFirst({
         where: {
           venueId: dto.venueId,
-          startDate: { lte: new Date(dto.endDate) },
-          endDate: { gte: new Date(dto.startDate) }
-        }
+          startDate: { lte: endDate },
+          endDate: { gte: startDate },
+        },
       });
 
       if (overlap) {
         throw new BadRequestException('Venue is already booked for these dates.');
       }
 
-      return await this.prisma.bookingInquiry.create({ data: dto });
+      return await this.prisma.bookingInquiry.create({
+        data: {
+          ...dto,
+          startDate,
+          endDate,
+        },
+      });
     } catch (error) {
       console.error(error);
 
       if (error instanceof BadRequestException) throw error;
 
-      throw new InternalServerErrorException(error?.message || 'Failed to create booking inquiry');
+      throw new InternalServerErrorException(
+        error?.message || 'Failed to create booking inquiry',
+      );
     }
   }
+
 
   async findAll(filters: ListBookingInquiryDto) {
     try {

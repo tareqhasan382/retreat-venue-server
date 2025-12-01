@@ -23,20 +23,40 @@ export class VenuesController {
     });
   }
 
+  // @Get()
+  // @ApiQuery({ name: "city", required: false })
+  // @ApiQuery({ name: "minCapacity", required: false })
+  // @ApiQuery({ name: "maxPrice", required: false })
+  // @ApiQuery({ name: "skip", required: false })
+  // @ApiQuery({ name: "take", required: false })
+  // async findAll(@Query() filters: ListVenuesDto,@Res() res: Response) {
+  //   const data = await this.venuesService.findAll(filters);
+  //   return sendResponse(res, {
+  //     statusCode: HttpStatus.OK,
+  //     success: true,
+  //     message: 'Venues Retrieve successfully.',
+  //     data: data,
+  //   });
+  // }
   @Get()
   @ApiQuery({ name: "city", required: false })
   @ApiQuery({ name: "minCapacity", required: false })
   @ApiQuery({ name: "maxPrice", required: false })
-  async findAll(@Query() filters: ListVenuesDto,@Res() res: Response) {
+  @ApiQuery({ name: "skip", required: false })
+  @ApiQuery({ name: "take", required: false })
+  async findAll(
+    @Query() filters: ListVenuesDto,
+    @Res() res: Response
+  ) {
     const data = await this.venuesService.findAll(filters);
+
     return sendResponse(res, {
       statusCode: HttpStatus.OK,
       success: true,
-      message: 'Venues Retrieve successfully.',
-      data: data,
+      message: "Venues retrieved successfully",
+      data: data
     });
   }
-
   @Get(":id")
   async findOne(@Param("id") id: string, @Res() res: Response) {
     const data = await this.venuesService.findOne(id);

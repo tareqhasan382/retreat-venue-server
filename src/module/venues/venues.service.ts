@@ -21,30 +21,35 @@ export class VenuesService {
   }
 
   async findAll(filters: ListVenuesDto) {
-    try {
-      return await this.prisma.venue.findMany({
-        where: {
-          city: filters.city
-            ? { contains: filters.city, mode: 'insensitive' }
-            : undefined,
-          capacity: filters.minCapacity
-            ? { gte: filters.minCapacity }
-            : undefined,
-          pricePerNight: filters.maxPrice
-            ? { lte: filters.maxPrice }
-            : undefined,
+    const {
+      city,
+      minCapacity,
+      maxPrice,
+      skip = 0,
+      take = 6,
+    } = filters;
+
+
+    const [items, total] = await Promise.all([
+      this.prisma.venue.findMany({
+        where:{
+          city: city ? { contains: city, mode: 'insensitive' } : undefined,
+          capacity: minCapacity ? { gte: Number(minCapacity) } : undefined,
+          pricePerNight: maxPrice ? { lte: Number(maxPrice) } : undefined,
         },
-        orderBy: { createdAt: 'desc' },
-      });
-    } catch (error) {
-      console.error(error);
+        skip: Number(skip),
+        take: Number(take),
+        orderBy: { createdAt: "desc" },
+      }),
+      this.prisma.venue.count({ where:{
+          city: city ? { contains: city, mode: 'insensitive' } : undefined,
+          capacity: minCapacity ? { gte: Number(minCapacity) } : undefined,
+          pricePerNight: maxPrice ? { lte: Number(maxPrice) } : undefined,
+        }, }),
+    ]);
 
-      throw new InternalServerErrorException(
-        error?.message || 'Failed to fetch venues.',
-      );
-    }
+    return { items, total };
   }
-
   async findOne(id: string) {
     try {
       if (!id) throw new BadRequestException('ID is required');
